@@ -5,6 +5,14 @@ import { getRandomWord } from '../words'
 export default defineEventHandler((event: H3Event) => {
   const query = getQuery(event);
   const difficulty = (query.difficulty as string) || 'facile';
+  const firstInit = query.firstInit === 'true';
+
+
+  const targetWord = getCookie(event, 'targetWord');
+
+  if (firstInit && targetWord) {
+    return { debugTarget: targetWord };
+  }
 
   // On récupère un mot selon la difficulté
   const randomWord = getRandomWord(
@@ -18,5 +26,5 @@ export default defineEventHandler((event: H3Event) => {
     maxAge: 3600
   });
 
-  return { message: 'Jeu initialisé', difficulty, debugTarget: randomWord };
+  return { debugTarget: randomWord };
 });

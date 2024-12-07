@@ -6,6 +6,8 @@ interface LexiqueEntry {
   ortho: string;
   freqLemFilms: number;
   cgram: string;
+  lemme: string;
+  deflem: number; // percent of persons who know the word
 }
 
 let WORDS: LexiqueEntry[] = [];
@@ -23,39 +25,42 @@ export async function loadLexique(filePath: string) {
   const orthoKey = Object.keys(sample).find(k => k.toLowerCase().includes('ortho'));
   const freqKey = Object.keys(sample).find(k => k.toLowerCase().includes('freqlemfilms2'));
   const cgramKey = Object.keys(sample).find(k => k.toLowerCase().includes('cgram'));
+  const lemmeKey = Object.keys(sample).find(k => k.toLowerCase().includes('3_lemme'));
+  const deflemKey = Object.keys(sample).find(k => k.toLowerCase().includes('deflem'));
 
-  if (!orthoKey || !freqKey || !cgramKey) {
+
+  if (!orthoKey || !freqKey || !cgramKey || !lemmeKey || !deflemKey) {
     throw new Error("Impossible de trouver les colonnes ortho ou freqlemfilms2 dans le fichier.");
   }
 
-  const cgramInluded = ['NOM', 'ADJ']
-
-  const allWords: LexiqueEntry[] = records.map((r: Record<string,string>) => {
+  const allWords: LexiqueEntry[] = records.map((r: Record<string, string>) => {
     return {
       ortho: r[orthoKey],
       freqLemFilms: parseFloat(r[freqKey]) || 0,
-      cgram: r[cgramKey]
+      cgram: r[cgramKey],
+      lemme: r[lemmeKey],
+      deflem: parseFloat(r[deflemKey]) || 0
     };
   }).filter((w: LexiqueEntry) => {
     const withSpace = w.ortho.includes(' ');
-    return w.ortho && w.ortho.length > 3 && !withSpace && w.freqLemFilms > 10 && cgramInluded.includes(w.cgram);
+    return w.ortho && w.ortho.length > 3 && !withSpace && w.freqLemFilms > 10 && w.deflem;
   });
 
-  const uniqueWords = new Set(allWords.map(w => w.ortho));
+  const uniqueWords = new Set(allWords.map(w => w.lemme));
 
-  
+
   // WORDS = allWords;
-  WORDS = Array.from(uniqueWords).map(w => allWords.find(w2 => w2.ortho === w)!);
-  
+  WORDS = Array.from(uniqueWords).map(w => allWords.find(w2 => w2.lemme === w)!);
+
   const randomWord = WORDS[Math.floor(Math.random() * WORDS.length)];
-  console.log('randomWord',WORDS.length, randomWord)
+  console.log('randomWord', WORDS.length, randomWord)
 }
 
 // Définition de la difficulté basée sur la fréquence
 function getDifficulty(word: LexiqueEntry): 'facile' | 'moyen' | 'difficile' {
-  const f = word.freqLemFilms;
-  if (f > 1000) return 'facile';
-  else if (f > 500) return 'moyen';
+  const f = word.deflem;
+  if (f > 80) return 'facile';
+  else if (f > 50) return 'moyen';
   else return 'difficile';
 }
 

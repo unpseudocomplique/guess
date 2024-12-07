@@ -1,2 +1,7 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
+@layer utilities {
+    .page {
+        @apply p-2 lg:p-5 flex flex-col gap-4;
+    }
+}
