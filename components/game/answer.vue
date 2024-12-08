@@ -25,6 +25,6 @@ currentValue.value = Math.max(props.answer.similarity, 0)
       <h3 class="uppercase font-bold text-xl">{{ props.answer.display }} </h3>
       <UBadge v-if="answer.win" class="font-bold rounded-full">Gagné !</UBadge>
     </div>
-    <UProgress v-model="output" :max="0.5" color="primary" size="sm" />
+    <UProgress v-model="output" :max="1" :min="0" color="primary" size="sm" />
   </UCard>
 </template>

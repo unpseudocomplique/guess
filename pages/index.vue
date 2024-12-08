@@ -15,8 +15,8 @@
         <u-card class="self-start w-96 max-w-full bg-linear-to-r/oklch from-indigo-500 to-teal-400">
             <h2>Tentatives :</h2>
         </u-card>
-        <ul class="w-full flex flex-col gap-2">
-            <li class="grow" v-for="(attempt, index) in attempts" :key="index">
+        <ul class="w-full flex flex-col gap-2" v-auto-animate>
+            <li class="grow" v-for="(attempt, index) in attempts" :key="attempt.display">
                 <game-answer :answer="attempt" />
             </li>
         </ul>
@@ -30,7 +30,7 @@ const { triggerSideCannons } = useConfetti();
 
 interface Attempt {
     display: string;
-    similarity?: number;
+    similarity: number;
     win?: boolean;
     message?: string;
 }
@@ -58,6 +58,13 @@ async function submitGuess() {
     error.value = null;
     if (!currentGuess.value) return;
 
+    const alreadyGuessed = attempts.value.some(a => a.display === currentGuess.value);
+    if (alreadyGuessed) {
+        error.value = 'Vous avez déjà tenté ce mot.';
+        new Promise(resolve => setTimeout(resolve, 2000)).then(() => error.value = null);
+        return;
+    }
+
     const res = await $fetch('/api/guess', {
         method: 'POST',
         body: { guess: currentGuess.value }
@@ -71,9 +78,9 @@ async function submitGuess() {
     }
 
     console.log('res', res)
-    attempts.value.push({
+    attempts.value.unshift({
         display: res.guess ?? '',
-        similarity: res.similarity - 0.5,
+        similarity: res.similarity,
         win: res.win,
         message: res.message
     });
@@ -81,6 +88,7 @@ async function submitGuess() {
     if (res.win) {
         triggerSideCannons()
     }
+    new Promise(resolve => setTimeout(resolve, 2000)).then(() => attempts.value.sort((a, b) => b.similarity - a.similarity));
     currentGuess.value = '';
 }
 
